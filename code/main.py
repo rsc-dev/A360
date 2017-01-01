@@ -71,31 +71,69 @@ SPORTS = {}
 def get_parser(path):
     """Generic file parser based on file name.
     """
+    LOG.debug('Looking for parser: {}'.format(path))
+    parser = None
     
-    if check_file_exists():
+    if check_file_exists(path):
         file_name = os.path.basename(path)
         if file_name in FILE_MAPPINGS.keys():
+            LOG.debug('Parser found.')
             # FILE_MAPPINGS holds class references for given files.
             # We get this reference and create instance of the class.
             parser = FILE_MAPPINGS[file_name]()
             
-            with open(file_name, 'rb') as f:
-                parser.ParseFromString(f.read())
+            if file_name is 'SAMPLES.GZB':
+                with gzip.open(path) as g:
+                    parser.ParseFromString(g.read())
+            else:
+                with open(path, 'rb') as f:
+                    parser.ParseFromString(f.read())
         else:
-            raise IOError('File not supported!')
+            LOG.debug('Parser not found: {}'.format(path))
     else:
+        LOG.error('File not found: {}'.format(path))
         raise IOError('File not found!')
     
-    pass
+    return parser
+# end-of-function parse_file    
+
+
+def parse_file(path):
+    """Parse single file and print as json
+    
+    Arguments:
+    path -- File to parse.
+    """
+    LOG.debug('Parsing single file {}'.format(dir))
+    
+    if check_file_exists(path):
+        parser = get_parser(path)
+        if parser is not None:
+            print parser
+    else:
+        LOG.error('File not found: {}'.format(path))
+        raise IOError('File not found!')
 # end-of-function parse_file    
 
 
 def check_user_data(dir):
+    """Walk device dump and parse user data files.
+    
+    Arguments:
+    dir -- Dump directory.
+    """
     LOG.debug('Parsing {}'.format(dir))
 
     dirs = list_dirs(dir)
         
     for d in dirs:
+        files = list_files(os.path.join(dir, d))
+        
+        for f in files:
+            parser = get_parser(os.path.join(dir, d, f))
+            if parser is not None:
+                print parser
+        
         subdirs = list_dirs(os.path.join(dir, d))
         # Filter only subdirs with date as name, i.e.: 20161213
         subdirs = filter(lambda x:re.match('\d{6}', x), subdirs)
@@ -157,6 +195,18 @@ def list_dirs(dir):
 # end-of-function    
 
 
+def list_files(dir):
+    """
+    Return list of all files for given directory.
+    
+    Arguments:
+    dir -- Directory to parse.
+    """
+    files = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+    return files
+# end-of-function  
+
+
 def check_file_exists(path):
     return os.path.exists(path) and os.path.isfile(path)
 # end-of-function check_file_exists   
@@ -165,27 +215,38 @@ def check_file_exists(path):
 def main():
     """Main method."""
     parser = argparse.ArgumentParser(description='Decode Polar A360 data tool.')
-    parser.add_argument('--dump', required=True, help='Path to device dump (see: https://github.com/rsc-dev/loophole)')
+    
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument('--dump', help='Path to device dump (see: https://github.com/rsc-dev/loophole).')
+    target.add_argument('--file', help='Decode single file.')
+    
+    parser.add_argument('--quiet', action='store_true', help='Turn off debug info.')
     
     args = parser.parse_args()
     
-    if os.path.isdir(args.dump):
-        LOG.debug('Dump dir ({}) is OK.'.format(args.dump))
-        
-        # Build sports lookup table
-        LOG.debug('Building sports table...')
-        sports = os.path.join(args.dump, 'SYS', 'SPORT')
-        build_sports_lookup(sports)
-        
-        # Parse device dump directory
-        LOG.debug('Looking for user data...')
-        user = os.path.join(args.dump, 'U')
-        check_user_data(user)
-        
-        sys.exit(0)
+    if args.quiet:
+        LOG.setLevel(logging.WARNING)
+    
+    if args.file is not None:
+        parse_file(args.file)
     else:
-        LOG.critical('Invalid dump dir ({}).'.format(args.dump))
-        sys.exit(-1)
+        if os.path.isdir(args.dump):
+            LOG.debug('Dump dir ({}) is OK.'.format(args.dump))
+            
+            # Build sports lookup table
+            LOG.debug('Building sports table...')
+            sports = os.path.join(args.dump, 'SYS', 'SPORT')
+            build_sports_lookup(sports)
+            
+            # Parse device dump directory
+            LOG.debug('Looking for user data...')
+            user = os.path.join(args.dump, 'U')
+            check_user_data(user)
+            
+            sys.exit(0)
+        else:
+            LOG.critical('Invalid dump dir ({}).'.format(args.dump))
+            sys.exit(-1)
         
 # end-of-function main
 
