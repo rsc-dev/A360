@@ -23,34 +23,37 @@ from pb import dailysummary_pb2     # DSUM.BPB
 from pb import identification_pb2   # ID.BPB
 from pb import recovery_times_pb2   # RECOVS.BPB  
 from pb import sport_pb2            # SPORT.BPB
+from pb import sportprofile_pb2     # PROFILE.PBP
 from pb import syncinfo_pb2         # SYNCINFO.BPB
 from pb import training_session_pb2 # TSESS.BPB
 from pb import user_database_pb2    # UDB.BPB
 from pb import user_id_pb2          # USERID.BPB
 from pb import user_physdata_pb2    # PHYSDATA.BPB
+from pb import user_prefs_pb2       # PREFS.PBP
+from pb import user_devset_pb2      # UDEVSET.BPB
 
 
+# Global mappings for known files
 FILE_MAPPINGS = {
-# 'ASAMPL.PP2' => Purpose?
-  'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples   (),
-  'BASE.BPB'    : exercise_base_pb2   .PbExerciseBase      (),
-  #'DEVICE.BPB'  : device_pb2          .PbDeviceInfo        (),  # BROKEN
-  'DGOAL.BPB'   : act_dailygoal_pb2   .PbDailyActivityGoal (),
-  'DSUM.BPB'    : dailysummary_pb2    .PbDailySummary      (),
-  'ID.BPB'      : identification_pb2  .PbIdentifier        (),
-  'PHYSDATA.BPB': user_physdata_pb2   .PbUserPhysData      (),
-# 'PREFS.PBP'   ?
-# 'PROFILE.PBP' ?
-  'RECOVS.BPB'  : recovery_times_pb2  .PbRecoveryTimes     (),
-  'SAMPLES.GZB' : exercise_samples_pb2.PbExerciseSamples   (),
-  'SPORT.BPB'   : sport_pb2           .PbSport             (),
-  'STATS.BPB'   : exercise_stats_pb2  .PbExerciseStatistics(),
-  #'SYNCINFO.BPB': syncinfo_pb2        .PbSyncInfo          (),  # BROKEN
-  'TSESS.BPB'   : training_session_pb2.PbTrainingSession   (),
-  'USERID.BPB'  : user_id_pb2         .PbUserIdentifier    (),
-  'UDB.BPB'     : user_database_pb2   .PbUserDb            (),
-# 'UDEVSET.BPB' ?
-  'ZONES.BPB'   : exercise_zones_pb2  .PbRecordedZones     (),
+  'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples,
+  'BASE.BPB'    : exercise_base_pb2   .PbExerciseBase,
+  #'DEVICE.BPB'  : device_pb2          .PbDeviceInfo,           # BROKEN
+  'DGOAL.BPB'   : act_dailygoal_pb2   .PbDailyActivityGoal,
+  'DSUM.BPB'    : dailysummary_pb2    .PbDailySummary,
+  'ID.BPB'      : identification_pb2  .PbIdentifier,
+  'PHYSDATA.BPB': user_physdata_pb2   .PbUserPhysData,
+  'PREFS.PBP'   : user_prefs_pb2      .PbGeneralPreferences,
+  'PROFILE.PBP' : sportprofile_pb2    .PbSportProfile,
+  'RECOVS.BPB'  : recovery_times_pb2  .PbRecoveryTimes,
+  'SAMPLES.GZB' : exercise_samples_pb2.PbExerciseSamples,
+  'SPORT.BPB'   : sport_pb2           .PbSport,
+  'STATS.BPB'   : exercise_stats_pb2  .PbExerciseStatistics,
+  #'SYNCINFO.BPB': syncinfo_pb2        .PbSyncInfo,             # BROKEN
+  'TSESS.BPB'   : training_session_pb2.PbTrainingSession,
+  'USERID.BPB'  : user_id_pb2         .PbUserIdentifier,
+  'UDB.BPB'     : user_database_pb2   .PbUserDb,
+  'UDEVSET.BPB' : user_devset_pb2     .PbUserDeviceSettings,
+  'ZONES.BPB'   : exercise_zones_pb2  .PbRecordedZones,
   }
 
   
@@ -65,64 +68,26 @@ LOG.setLevel(logging.DEBUG)
 SPORTS = {}
 
 
-def parse_ACT(path):
-    """Parse activity files (ASAMPL0.BPB).
-    
-    Arguments:
-    path -- ASAMPL0.BPB file path
+def get_parser(path):
+    """Generic file parser based on file name.
     """
-    with open(path, 'rb') as f:
-        asamples = act_samples_pb2.PbActivityInfo()
-        asamples.ParseFromString(f.read())
-        
-        print asamples
-        print dir(asamples)
-# end-of-function parse_ACT    
-
-
-def parse_DSUM(path):
-    """Parse daily summary files (DSUM.BPB).
     
-    Arguments:
-    path -- DSUM.BPB file path
-    """
-    with open(path, 'rb') as f:
-        dsum = dailysummary_pb2.PbDailySummary()
-        dsum.ParseFromString(f.read())
-        
-        print dsum
-        print dir(dsum)
-# end-of-function parse_DSUM    
-
-
-def parse_E(path):
-    pass
-# end-of-function parse_E  
-
-
-def parse_PHYSDATA(path):
-    pass
-# end-of-function parse_PHYSDATA    
-
-
-def parse_SAMPLES(path):
-    pass
-# end-of-function parse_SAMPLES    
-
-
-def parse_ID(path):
-    """Parse identification files (ID.BPB).
+    if check_file_exists():
+        file_name = os.path.basename(path)
+        if file_name in FILE_MAPPINGS.keys():
+            # FILE_MAPPINGS holds class references for given files.
+            # We get this reference and create instance of the class.
+            parser = FILE_MAPPINGS[file_name]()
+            
+            with open(file_name, 'rb') as f:
+                parser.ParseFromString(f.read())
+        else:
+            raise IOError('File not supported!')
+    else:
+        raise IOError('File not found!')
     
-    Arguments:
-    path -- ID.BPB file path
-    """
-    with open(path, 'rb') as f:
-        id = identification_pb2.PbIdentifier()
-        id.ParseFromString(f.read())
-        
-        print id
-        #print dir(id)
-# end-of-function parse_ID    
+    pass
+# end-of-function parse_file    
 
 
 def check_user_data(dir):
