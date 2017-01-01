@@ -82,7 +82,8 @@ def get_parser(path):
             # We get this reference and create instance of the class.
             parser = FILE_MAPPINGS[file_name]()
             
-            if file_name is 'SAMPLES.GZB':
+            if file_name == 'SAMPLES.GZB':
+                print 'here'
                 with gzip.open(path) as g:
                     parser.ParseFromString(g.read())
             else:
