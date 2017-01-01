@@ -7,16 +7,53 @@ __version__     = '0.1'
 
 
 import argparse
+import gzip
 import logging
 import os
 import re
 import sys
 
+from pb import act_dailygoal_pb2    # DGOAL.BPB
 from pb import act_samples_pb2      # ASAMPL0.BPB 
+from pb import exercise_base_pb2    # BASE.BPB
+from pb import exercise_samples_pb2 # SAMPLES.GZB - GZIP
+from pb import exercise_stats_pb2   # STATS.BPB
+from pb import exercise_zones_pb2   # ZONES.BPB
 from pb import dailysummary_pb2     # DSUM.BPB
 from pb import identification_pb2   # ID.BPB
+from pb import recovery_times_pb2   # RECOVS.BPB  
 from pb import sport_pb2            # SPORT.BPB
+from pb import syncinfo_pb2         # SYNCINFO.BPB
+from pb import training_session_pb2 # TSESS.BPB
+from pb import user_database_pb2    # UDB.BPB
+from pb import user_id_pb2          # USERID.BPB
+from pb import user_physdata_pb2    # PHYSDATA.BPB
 
+
+FILE_MAPPINGS = {
+# 'ASAMPL.PP2' => Purpose?
+  'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples   (),
+  'BASE.BPB'    : exercise_base_pb2   .PbExerciseBase      (),
+  #'DEVICE.BPB'  : device_pb2          .PbDeviceInfo        (),  # BROKEN
+  'DGOAL.BPB'   : act_dailygoal_pb2   .PbDailyActivityGoal (),
+  'DSUM.BPB'    : dailysummary_pb2    .PbDailySummary      (),
+  'ID.BPB'      : identification_pb2  .PbIdentifier        (),
+  'PHYSDATA.BPB': user_physdata_pb2   .PbUserPhysData      (),
+# 'PREFS.PBP'   ?
+# 'PROFILE.PBP' ?
+  'RECOVS.BPB'  : recovery_times_pb2  .PbRecoveryTimes     (),
+  'SAMPLES.GZB' : exercise_samples_pb2.PbExerciseSamples   (),
+  'SPORT.BPB'   : sport_pb2           .PbSport             (),
+  'STATS.BPB'   : exercise_stats_pb2  .PbExerciseStatistics(),
+  #'SYNCINFO.BPB': syncinfo_pb2        .PbSyncInfo          (),  # BROKEN
+  'TSESS.BPB'   : training_session_pb2.PbTrainingSession   (),
+  'USERID.BPB'  : user_id_pb2         .PbUserIdentifier    (),
+  'UDB.BPB'     : user_database_pb2   .PbUserDb            (),
+# 'UDEVSET.BPB' ?
+  'ZONES.BPB'   : exercise_zones_pb2  .PbRecordedZones     (),
+  }
+
+  
 # Logger setup
 logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s')
 LOG = logging.getLogger()
@@ -66,6 +103,11 @@ def parse_E(path):
 def parse_PHYSDATA(path):
     pass
 # end-of-function parse_PHYSDATA    
+
+
+def parse_SAMPLES(path):
+    pass
+# end-of-function parse_SAMPLES    
 
 
 def parse_ID(path):
