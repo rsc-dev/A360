@@ -83,7 +83,6 @@ def get_parser(path):
             parser = FILE_MAPPINGS[file_name]()
             
             if file_name == 'SAMPLES.GZB':
-                print 'here'
                 with gzip.open(path) as g:
                     parser.ParseFromString(g.read())
             else:
