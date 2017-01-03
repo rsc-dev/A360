@@ -34,6 +34,7 @@ Decode Polar A360 data tool.
 optional arguments:
   -h, --help   show this help message and exit
   --dump DUMP  Path to device dump (see: https://github.com/rsc-dev/loophole).
+  --out OUT    Output file. If not set, console output is used.  
   --file FILE  Decode single file.
   --quiet      Turn off debug info.
 ```
