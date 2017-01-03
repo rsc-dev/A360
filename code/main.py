@@ -98,18 +98,23 @@ def get_parser(path):
 # end-of-function parse_file    
 
 
-def parse_file(path):
+def parse_file(path, out):
     """Parse single file and print as json
     
     Arguments:
     path -- File to parse.
+    out -- Output file.
     """
     LOG.debug('Parsing single file {}'.format(dir))
     
     if check_file_exists(path):
         parser = get_parser(path)
         if parser is not None:
-            print parser
+            if out is not None:
+                with open(out, 'w') as f:
+                    f.write(str(parser))
+            else:
+                print parser
     else:
         LOG.error('File not found: {}'.format(path))
         raise IOError('File not found!')
@@ -220,6 +225,7 @@ def main():
     target.add_argument('--dump', help='Path to device dump (see: https://github.com/rsc-dev/loophole).')
     target.add_argument('--file', help='Decode single file.')
     
+    parser.add_argument('--out', help='Output file. If not set, console output is used.')
     parser.add_argument('--quiet', action='store_true', help='Turn off debug info.')
     
     args = parser.parse_args()
@@ -228,7 +234,7 @@ def main():
         LOG.setLevel(logging.WARNING)
     
     if args.file is not None:
-        parse_file(args.file)
+        parse_file(args.file, args.out)
     else:
         if os.path.isdir(args.dump):
             LOG.debug('Dump dir ({}) is OK.'.format(args.dump))
